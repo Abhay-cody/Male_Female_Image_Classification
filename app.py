@@ -3,66 +3,106 @@ import numpy as np
 from PIL import Image
 import joblib
 
-# -------------------------
+# -------------------------------------------------
 # Page Configuration
-# -------------------------
+# -------------------------------------------------
 st.set_page_config(
-    page_title="Male vs Female Classifier",
-    page_icon="♂️♀️",
+    page_title="Male vs Female Image Classifier",
+    page_icon="🧑",
     layout="centered"
 )
 
-# -------------------------
+# -------------------------------------------------
 # Load Model
-# -------------------------
-model = joblib.load("male_female_model.pkl")
+# -------------------------------------------------
+try:
+    model = joblib.load("male_female_model.pkl")
+except Exception as e:
+    st.error(f"Error loading model: {e}")
+    st.stop()
 
+# -------------------------------------------------
+# Constants
+# -------------------------------------------------
 IMG_SIZE = 64
 
-st.title("♂️♀️ Male vs Female Image Classifier")
-st.write("Upload an image to predict whether it is a Male or Female.")
+# -------------------------------------------------
+# IMPORTANT:
+# Change this mapping ONLY if your training labels
+# were different.
+#
+# If:
+# Female = 0
+# Male   = 1
+# (Most common)
+# -------------------------------------------------
 
-# -------------------------
+CLASS_NAMES = {
+    0: "Female",
+    1: "Male"
+}
+
+# -------------------------------------------------
+# App Title
+# -------------------------------------------------
+st.title("🧑 Male vs Female Image Classifier")
+
+st.write(
+    "Upload a face image to predict whether the person is **Male** or **Female**."
+)
+
+# -------------------------------------------------
 # Upload Image
-# -------------------------
+# -------------------------------------------------
 uploaded_file = st.file_uploader(
-    "Choose an Image",
+    "Upload Image",
     type=["jpg", "jpeg", "png"]
 )
 
 if uploaded_file is not None:
 
-    # Read image using Pillow
-    image = Image.open(uploaded_file)
+    # Read Image
+    image = Image.open(uploaded_file).convert("RGB")
 
-    # Convert to RGB (important if image is grayscale/RGBA)
-    image = image.convert("RGB")
+    st.image(image, caption="Uploaded Image", use_container_width=True)
 
-    # Display image
-    st.image(image, caption="Uploaded Image", width=300)
-
-    # Resize image
+    # Preprocess
     resized = image.resize((IMG_SIZE, IMG_SIZE))
-
-    # Convert to NumPy array
     resized = np.array(resized)
-
-    # Flatten image for Logistic Regression
-    resized = resized.flatten()
+    resized = resized.flatten().reshape(1, -1)
 
     # Prediction
-    prediction = model.predict([resized])[0]
+    prediction = model.predict(resized)[0]
+    probabilities = model.predict_proba(resized)[0]
 
-    probability = model.predict_proba([resized])[0]
+    # -------------------------------------------------
+    # Display Prediction
+    # -------------------------------------------------
 
-    # Display prediction
-    if prediction == 0:
-        st.success("♀️ Prediction: MALE")
+    predicted_label = CLASS_NAMES[prediction]
+
+    st.markdown("---")
+    st.subheader("Prediction")
+
+    if predicted_label == "Male":
+        st.success("🧔 **Prediction: MALE**")
     else:
-        st.success("♂️ Prediction: FEMALE")
+        st.success("👩 **Prediction: FEMALE**")
 
-    # Display probabilities
+    # -------------------------------------------------
+    # Confidence Scores
+    # -------------------------------------------------
+
     st.subheader("Prediction Confidence")
 
-    st.write(f"♀️ Male Probability: **{probability[0] * 100:.2f}%**")
-    st.write(f"♂️ Female Probability: **{probability[1] * 100:.2f}%**")
+    for cls, prob in zip(model.classes_, probabilities):
+        st.write(f"**{CLASS_NAMES[cls]}:** {prob*100:.2f}%")
+        st.progress(float(prob))
+
+    # -------------------------------------------------
+    # Technical Information
+    # -------------------------------------------------
+
+    with st.expander("Model Information"):
+        st.write("Model Classes:", model.classes_)
+        st.write("Predicted Class Index:", prediction)
