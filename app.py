@@ -7,7 +7,7 @@ import joblib
 # Page Configuration
 # -------------------------
 st.set_page_config(
-    page_title="Female vs Male Classifier",
+    page_title="Male vs Female Classifier",
     page_icon="♂️♀️",
     layout="centered"
 )
@@ -15,11 +15,11 @@ st.set_page_config(
 # -------------------------
 # Load Model
 # -------------------------
-model = joblib.load("female_male_model.pkl")
+model = joblib.load("male_female_model.pkl")
 
 IMG_SIZE = 64
 
-st.title("♂️♀️ Female vs Male Image Classifier")
+    st.title("♂️♀️ Male vs Female Image Classifier")
 st.write("Upload an image to predict whether it is a Male or Female.")
 
 # -------------------------
@@ -57,12 +57,12 @@ if uploaded_file is not None:
 
     # Display prediction
     if prediction == 0:
-        st.success("♀️ Prediction: FEMALE")
+        st.success("♀️ Prediction: MALE")
     else:
-        st.success("♂️ Prediction: MALE")
+        st.success("♂️ Prediction: FEMALE")
 
     # Display probabilities
     st.subheader("Prediction Confidence")
 
-    st.write(f"♀️ Female Probability: **{probability[0] * 100:.2f}%**")
-    st.write(f"♂️ Male Probability: **{probability[1] * 100:.2f}%**")
+    st.write(f"♀️ Male Probability: **{probability[0] * 100:.2f}%**")
+    st.write(f"♂️ Female Probability: **{probability[1] * 100:.2f}%**")
